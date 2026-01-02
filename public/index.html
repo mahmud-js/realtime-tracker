@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Real-time location tracker built with Go and WebSocket">
+    <title>Real Time Location Tracker | Golang | Mahmud Rahman</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4CAF50',
+                        success: '#4CAF50',
+                        warning: '#ff9800',
+                        danger: '#f44336',
+                        info: '#2196F3',
+                        darkBg: '#2c3e50',
+                        lightBg: '#ecf0f1',
+                        textPrimary: '#333',
+                        textSecondary: '#666',
+                    },
+                    borderRadius: {
+                        'custom': '8px',
+                    },
+                    boxShadow: {
+                        'custom': '0 2px 12px rgba(0, 0, 0, 0.15)',
+                    },
+                    keyframes: {
+                        slideIn: {
+                            '0%': { opacity: '0', transform: 'translateY(-10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    },
+                    animation: {
+                        slideIn: 'slideIn 0.3s ease-out',
+                        slideInUp: 'slideInUp 0.3s ease-out',
+                        pulseSlow: 'pulse 1.5s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        /* Minimal custom CSS for things Tailwind doesn't handle natively via CDN easily */
+        #map { height: 100%; width: 100%; z-index: 1; }
+        .leaflet-container { font-family: inherit; }
+        
+        /* Show copy button on hover of the parent */
+        .info-item:hover .copy-btn { display: inline-block; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden bg-lightBg font-sans text-textPrimary m-0 p-0">
+
+    <header class="bg-darkBg text-white py-4 shadow-custom z-[100]">
+        <div class="max-w-[1200px] mx-auto px-4">
+            <h1 class="m-0 font-semibold text-[clamp(1.5rem,4vw,2rem)]">📍 Real Time Location Tracker</h1>
+        </div>
+    </header>
+
+    <div id="map" class="flex-1 min-h-0 relative"></div>
+
+    <div class="info-panel absolute top-12 right-4 z-[1000] bg-white rounded-custom shadow-custom backdrop-blur-md max-w-[300px] w-[calc(100%-2rem)] animate-slideIn md:w-auto">
+        <div class="p-5">
+            <div class="info-item flex items-center gap-2 mb-4 text-[clamp(0.85rem,2vw,0.95rem)] last:mb-0">
+                <label class="font-semibold text-textSecondary min-w-[90px]">Device ID:</label>
+                <span id="my-id" class="flex-1 break-all font-medium">Generating...</span>
+                <button id="copy-btn" class="copy-btn hidden border border-gray-300 p-1 px-2 rounded cursor-pointer transition-all hover:bg-lightBg hover:border-primary" title="Copy ID">📋</button>
+            </div>
+            
+            <div class="info-item flex items-center gap-2 mb-4 text-[clamp(0.85rem,2vw,0.95rem)] last:mb-0">
+                <label class="font-semibold text-textSecondary min-w-[90px]">Status:</label>
+                <span id="status" class="status-badge inline-block px-3 py-1.5 rounded-full text-[0.85rem] font-semibold text-center min-w-[120px] bg-yellow-100 text-yellow-800 animate-pulseSlow">Connecting...</span>
+            </div>
+            
+            <div class="info-item flex items-center gap-2 mb-4 text-[clamp(0.85rem,2vw,0.95rem)] last:mb-0">
+                <label class="font-semibold text-textSecondary min-w-[90px]">Device:</label>
+                <span id="device-type" class="flex-1 break-all font-medium">Detecting...</span>
+            </div>
+            
+            <div class="info-item flex items-center gap-2 mb-4 text-[clamp(0.85rem,2vw,0.95rem)] last:mb-0">
+                <label class="font-semibold text-textSecondary min-w-[90px]">Users Online:</label>
+                <span id="user-count" class="flex-1 break-all font-medium">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="fixed bottom-8 right-4 p-4 px-6 text-white rounded-custom shadow-custom hidden z-[2000] max-w-[300px] animate-slideInUp"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="./js/index.js"></script>
+</body>
+</html>
