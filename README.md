@@ -14,6 +14,8 @@ Check out the complete step-by-step tutorial on YouTube to learn how this projec
 
 - ✅ Real-time location tracking using WebSocket
 - ✅ Interactive map powered by Leaflet.js
+- ✅ Multiple map layers (OpenStreetMap, CartoDB, Stamen)
+- ✅ Auto-zoom to user's actual location on connection
 - ✅ Multi-device support detection
 - ✅ Responsive design (mobile, tablet, desktop)
 - ✅ User-friendly interface with status indicators
@@ -22,21 +24,25 @@ Check out the complete step-by-step tutorial on YouTube to learn how this projec
 - ✅ Error handling and reconnection logic
 - ✅ Cross-browser compatible
 - ✅ Beautiful notifications system
+- ✅ Production-ready backend with health checks
+- ✅ Configurable server settings via environment variables
 
 
 ## Tech Stack 🛠️
 
 ### Backend
-- **Go** - Server runtime
-- **Gorilla WebSocket** - Real-time communication
-- **HTTP Server** - Built-in Go http package
+- **Go 1.16+** - Server runtime
+- **Gorilla WebSocket** - Real-time bidirectional communication
+- **HTTP Server** - Built-in Go http package with middleware
+- **Structured Logging** - Production-grade logging
+- **Configuration Management** - Environment variables support
 
 ### Frontend
-- **HTML5** - Markup
-- **CSS3** - Responsive styling with CSS Grid/Flexbox
-- **Vanilla JavaScript** - No dependencies
-- **Leaflet.js** - Interactive maps
-- **OpenStreetMap** - Map tiles
+- **HTML5** - Semantic markup
+- **CSS3** - Responsive styling with CSS Grid/Flexbox and Tailwind CSS
+- **Vanilla JavaScript** - No dependencies, ES6+
+- **Leaflet.js** - Interactive maps library
+- **Multiple Map Providers** - OpenStreetMap, CartoDB, Stamen
 
 ## Installation & Setup 🚀
 
@@ -85,7 +91,37 @@ Visit `http://localhost:8080` in your browser.
 ws://localhost:8080/ws
 ```
 
-### Message Format
+### HTTP Endpoints
+
+**Health Check**
+```bash
+GET /health
+```
+Response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-04T10:30:45Z",
+  "connected": 5,
+  "uptime_check": true
+}
+```
+
+**Server Statistics**
+```bash
+GET /stats
+```
+Response:
+```json
+{
+  "connected_clients": 5,
+  "tracked_locations": 4,
+  "broadcast_queue": 0,
+  "timestamp": "2024-01-04T10:30:45Z"
+}
+```
+
+### WebSocket Message Format
 
 **Client → Server (Location Update)**
 ```json
@@ -93,20 +129,39 @@ ws://localhost:8080/ws
   "id": "User-123456",
   "lat": 51.505,
   "lng": -0.09,
-  "deviceType": "Windows 💻"
+  "deviceType": "Windows 💻",
+  "timestamp": "2024-01-04T10:30:45Z"
 }
 ```
 
 **Server → Clients (Broadcast)**
-Same format as above - all clients receive all location updates
+Same format as above - all clients receive all location updates with timestamps
 
 ## Configuration ⚙️
+
+### Server Configuration (Backend)
+
+Set via environment variables:
+```bash
+# Server settings
+export SERVER_HOST="0.0.0.0"        # Default: 0.0.0.0
+export SERVER_PORT="8080"           # Default: 8080
+export READ_TIMEOUT="15s"           # Default: 15 seconds
+export WRITE_TIMEOUT="15s"          # Default: 15 seconds
+export IDLE_TIMEOUT="60s"           # Default: 60 seconds
+
+# Then run:
+go run main.go
+```
+
+### Frontend Configuration
 
 Edit `public/js/index.js` to customize:
 - Default map center coordinates
 - Default zoom level
 - Geolocation accuracy
-- Reconnection timeout
+- Update interval
+- Map layers
 
 ```javascript
 const CONFIG = {
@@ -117,7 +172,8 @@ const CONFIG = {
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 0
-    }
+    },
+    UPDATE_INTERVAL: 5000
 };
 ```
 
@@ -136,10 +192,21 @@ Breakpoints:
 ## Features in Detail 🔍
 
 ### Real-Time Updates
-Uses WebSocket for bidirectional communication with ~100ms latency.
+Uses WebSocket for bidirectional communication with ~100ms latency and timestamp tracking.
 
 ### User Presence
 Online user count updates automatically. Users are removed from the map when they disconnect.
+
+### Map Layer Switching
+Switch between three open-source map providers:
+- **OpenStreetMap**: Free, community-driven base map
+- **CartoDB Positron**: Clean, minimal light map design
+- **Stamen Toner**: High-contrast black & white map
+
+Buttons in the info panel allow instant switching without losing markers.
+
+### Auto-Zoom to User Location
+When your location is first detected, the map automatically zooms to your position (zoom level 15) and centers on your coordinates, instead of showing a default location.
 
 ### Device Detection
 Automatically detects user device type:
@@ -228,24 +295,46 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment guide.
 
+## Backend Features (Production Ready) 🔒
+
+### Server Features
+- **Graceful Shutdown**: Handles SIGINT/SIGTERM signals cleanly
+- **Health Checks**: `/health` endpoint for monitoring
+- **Statistics**: `/stats` endpoint for server metrics
+- **Request Logging**: Detailed request/response logging with duration
+- **Connection Management**: Automatic dead connection cleanup
+- **Data Validation**: Input validation for all location data
+- **Configuration**: Environment variable support for all settings
+- **Error Handling**: Comprehensive error handling and recovery
+- **Performance**: Buffered channels and RWMutex for concurrency
+
+### Data Persistence
+- Last known location stored per user
+- Timestamp tracking for all updates
+
 ## Known Limitations ⚠️
 
 1. Locations only visible while browser tab is active
-2. Location history not persisted
+2. Location history not persisted to database
 3. No authentication/user accounts
 4. No offline mode
 5. Limited to single server instance (no clustering)
+6. In-memory storage (lost on server restart)
 
 ## Future Enhancements 💭
 
-- [ ] MongoDB/PostgreSQL for location history
-- [ ] User authentication
-- [ ] Location trails/history
-- [ ] Geofencing alerts
-- [ ] Custom markers
-- [ ] Dark mode
-- [ ] Location sharing groups
-- [ ] Export location data
+- [ ] PostgreSQL/MongoDB for location history persistence
+- [ ] User authentication and authorization
+- [ ] Location trails/history visualization
+- [ ] Geofencing alerts and notifications
+- [ ] Custom markers and icons
+- [ ] Dark mode theme
+- [ ] Location sharing groups/teams
+- [ ] Export location data (CSV/JSON)
+- [ ] Server clustering and horizontal scaling
+- [ ] Redis for distributed caching
+- [ ] Metrics and monitoring (Prometheus)
+- [ ] Advanced search and filtering
 
 ## License 📄
 

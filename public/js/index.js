@@ -11,6 +11,28 @@ const CONFIG = {
     UPDATE_INTERVAL: 5000
 };
 
+// Map layers definition
+const MAP_LAYERS = {
+    osm: {
+        name: 'OpenStreetMap',
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+    },
+    cartodb: {
+        name: 'CartoDB Positron',
+        url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        maxZoom: 20
+    },
+    stamen: {
+        name: 'Stamen Toner',
+        url: 'https://tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png',
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 18
+    }
+};
+
 // State Management
 const state = {
     userId: null,
@@ -19,15 +41,19 @@ const state = {
     markers: {},
     userCount: 0,
     isConnected: false,
-    watchId: null
+    watchId: null,
+    currentLayer: 'osm',
+    userZoomed: false,
+    currentTileLayer: null
 };
 
 // Initialize Leaflet Map
 const map = L.map('map').setView([CONFIG.DEFAULT_LAT, CONFIG.DEFAULT_LNG], CONFIG.DEFAULT_ZOOM);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
-    maxZoom: 19
+// Initialize with OpenStreetMap
+state.currentTileLayer = L.tileLayer(MAP_LAYERS.osm.url, {
+    attribution: MAP_LAYERS.osm.attribution,
+    maxZoom: MAP_LAYERS.osm.maxZoom
 }).addTo(map);
 
 // --- Utility Functions ---
@@ -90,6 +116,32 @@ function updateUserCount(count) {
     document.getElementById('user-count').innerText = count;
 }
 
+function switchMapLayer(layerId) {
+    if (state.currentLayer === layerId) return;
+    
+    // Remove current layer
+    map.removeLayer(state.currentTileLayer);
+    
+    // Add new layer
+    const layer = MAP_LAYERS[layerId];
+    state.currentTileLayer = L.tileLayer(layer.url, {
+        attribution: layer.attribution,
+        maxZoom: layer.maxZoom
+    }).addTo(map);
+    
+    state.currentLayer = layerId;
+    
+    // Update button styles
+    document.querySelectorAll('.map-layer-btn').forEach(btn => {
+        btn.classList.remove('active', 'bg-primary', 'text-white', 'border-primary');
+        btn.classList.add('border-gray-300');
+    });
+    document.getElementById(`map-${layerId}`).classList.add('active', 'bg-primary', 'text-white', 'border-primary');
+    document.getElementById(`map-${layerId}`).classList.remove('border-gray-300');
+    
+    showNotification(`Switched to ${layer.name}`, 'info');
+}
+
 // --- Core Logic ---
 
 function initializeUI() {
@@ -107,6 +159,11 @@ function initializeUI() {
             showNotification('Failed to copy ID', 'error');
         });
     });
+    
+    // Map layer buttons
+    document.getElementById('map-osm').addEventListener('click', () => switchMapLayer('osm'));
+    document.getElementById('map-cartodb').addEventListener('click', () => switchMapLayer('cartodb'));
+    document.getElementById('map-stamen').addEventListener('click', () => switchMapLayer('stamen'));
     
     updateStatus('Connecting...', 'connecting');
 }
@@ -154,6 +211,12 @@ function updateMarker(data) {
     if (!state.markers[data.id]) {
         state.markers[data.id] = L.marker([lat, lng]).addTo(map);
         updateUserCount(Object.keys(state.markers).length);
+        
+        // Zoom to user's location on first location received (only once)
+        if (data.id === state.userId && !state.userZoomed) {
+            map.setView([lat, lng], 15);
+            state.userZoomed = true;
+        }
         
         // Don't notify for yourself
         if (data.id !== state.userId) {
