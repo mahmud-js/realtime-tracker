@@ -1,83 +1,17 @@
 # Deployment Guide 🚀
 
-Deploy Real Time Location Tracker to production.
+Deploy Real Time Location Tracker to **devplus.fun**.
 
-## Prerequisites
-
-- Registered domain name (optional but recommended)
-- SSL certificate (Let's Encrypt)
-- Server with public IP (AWS, DigitalOcean, Heroku, etc.)
-- SSH access to server
-
-## Local Deployment (Development)
+## 🚀 Quick Start (5 minutes)
 
 ```bash
-# 1. Clone repository
-git clone https://github.com/mahmud-js/realtime-tracker.git
+git clone https://github.com/yourusername/realtime-tracker.git
 cd realtime-tracker
-
-# 2. Install Go 1.16+
-# https://golang.org/doc/install
-
-# 3. Build executable
-go build -o tracker main.go
-
-# 4. Run
-./tracker
-# Server runs on port 8080
+docker-compose up -d
+curl http://localhost:8080/health
 ```
 
-Visit `http://localhost:8080`
-
-## Docker Deployment 🐳
-
-### Step 1: Create Dockerfile
-
-```dockerfile
-FROM golang:1.21-alpine
-
-WORKDIR /app
-
-COPY go.mod go.sum ./
-RUN go mod download
-
-COPY . .
-
-RUN go build -o tracker main.go
-
-EXPOSE 8080
-
-CMD ["./tracker"]
-```
-
-### Step 2: Create .dockerignore
-
-```
-.git
-.gitignore
-README.md
-CONTRIBUTING.md
-DEPLOYMENT.md
-```
-
-### Step 3: Build and Run
-
-```bash
-# Build image
-docker build -t realtime-tracker .
-
-# Run container
-docker run -p 8080:8080 realtime-tracker
-
-# With Docker Compose
-docker-compose up
-```
-
-### Step 4: Docker Compose (docker-compose.yml)
-
-```yaml
-
-```
+## Option 1: Docker Deployment (Recommended)
 
 ## Cloud Deployment
 

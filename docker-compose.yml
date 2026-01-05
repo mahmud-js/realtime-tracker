@@ -2,9 +2,42 @@ version: '3.8'
 
 services:
   tracker:
-    build: .
+    build:
+      context: .
+      dockerfile: Docker
+    container_name: realtime-tracker
     ports:
       - "8080:8080"
     environment:
       - PORT=8080
+      - SERVER_HOST=0.0.0.0
+      - READ_TIMEOUT=15s
+      - WRITE_TIMEOUT=15s
+      - IDLE_TIMEOUT=60s
+      - LOG_LEVEL=INFO
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - tracker-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Production: Uncomment below for reverse proxy setup
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.tracker.rule=Host(`devplus.fun`)"
+    #   - "traefik.http.services.tracker.loadbalancer.server.port=8080"
+
+networks:
+  tracker-network:
+    driver: bridge
+
+# For local development with hot reload:
+# docker-compose -f docker-compose.dev.yml up

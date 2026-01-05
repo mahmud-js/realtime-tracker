@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  tracker-dev:
+    build:
+      context: .
+      dockerfile: Docker
+    container_name: realtime-tracker-dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - /app/.git
+    environment:
+      - PORT=8080
+      - SERVER_HOST=0.0.0.0
+      - READ_TIMEOUT=15s
+      - WRITE_TIMEOUT=15s
+      - IDLE_TIMEOUT=60s
+      - LOG_LEVEL=DEBUG
+      - ENV=development
+    restart: on-failure
+    networks:
+      - tracker-dev-network
+    command: >
+      sh -c "go install github.com/cosmtrek/air@latest &&
+             air"
+
+networks:
+  tracker-dev-network:
+    driver: bridge

@@ -47,33 +47,40 @@ Check out the complete step-by-step tutorial on YouTube to learn how this projec
 ## Installation & Setup 🚀
 
 ### Prerequisites
-- Go 1.16+
+- Go 1.24+
 - Git
+- Docker & Docker Compose (optional)
 - A modern web browser
 
-### Step 1: Clone the Repository
+### Quick Start (Development)
+
 ```bash
-git clone https://github.com/mahmud-js/realtime-tracker.git
+# Clone repository
+git clone https://github.com/yourusername/realtime-tracker.git
 cd realtime-tracker
-```
 
-### Step 2: Install Dependencies
-```bash
+# Option 1: Run directly
 go mod download
-```
-
-### Step 3: Run the Server
-```bash
 go run main.go
+
+# Option 2: Run with Docker
+docker-compose up
+
+# Option 3: Run with hot reload
+air
 ```
 
-You should see:
-```
-Server started on :8080
-```
+Visit `http://localhost:8080`
 
-### Step 4: Open in Browser
-Visit `http://localhost:8080` in your browser.
+### Production Deployment
+
+**See [CI_CD_SETUP.md](CI_CD_SETUP.md) for automated build pipeline.**
+
+For manual deployment to **devplus.fun**:
+```bash
+docker-compose up -d
+# Then setup Nginx + SSL (see DEPLOYMENT.md)
+```
 
 ## Usage 💡
 
@@ -188,6 +195,53 @@ Breakpoints:
 - `≥768px`: Desktop layout
 - `480px - 768px`: Tablet layout
 - `<480px`: Mobile layout
+
+## CI/CD & Deployment 🚀
+
+### Automated Testing & Building
+
+This project uses **GitHub Actions** for CI/CD on every push to `main`:
+
+**Builds**:
+- ✅ Go backend (Linux, Windows, macOS)
+- ✅ Flutter mobile (APK)
+- ✅ Flutter web
+- ✅ Docker container
+
+**Tests**:
+- ✅ Go unit tests with race detection
+- ✅ Go vet code quality
+- ✅ Flutter analyze
+- ✅ Flutter unit tests
+- ✅ Security scanning (Gosec)
+
+**Artifacts**: Download from Actions tab after successful build
+
+### Quick Deploy (Production)
+
+```bash
+# Docker (Recommended)
+docker-compose up -d
+
+# Systemd Service
+sudo systemctl start tracker
+
+# See CI_CD_SETUP.md for detailed setup
+```
+
+Deploy to **devplus.fun**:
+- See [CI_CD_SETUP.md](CI_CD_SETUP.md) - Complete guide
+- See [DEPLOYMENT.md](DEPLOYMENT.md) - Nginx + SSL setup
+
+### Development Setup
+
+```bash
+# Hot reload (auto-restart on code changes)
+air
+
+# Or Docker with hot reload
+docker-compose -f docker-compose.dev.yml up
+```
 
 ## Features in Detail 🔍
 
