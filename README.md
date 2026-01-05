@@ -56,7 +56,7 @@ Check out the complete step-by-step tutorial on YouTube to learn how this projec
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/realtime-tracker.git
+git clone https://github.com/mahmud-js/realtime-tracker.git
 cd realtime-tracker
 
 # Option 1: Run directly

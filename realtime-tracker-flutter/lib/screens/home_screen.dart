@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl/maplibre_gl.dart' as mg;
 
 import '../providers/websocket_provider.dart';
 import '../providers/location_provider.dart';
@@ -16,8 +16,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late MapLibreController mapController;
-  final List<Symbol> _symbols = [];
+  late mg.MapLibreController mapController;
+  final List<mg.Symbol> _symbols = [];
   String mapStyle = 'https://demotiles.maplibre.org/style.json'; // Free MapLibre style
   bool _userZoomed = false;
 
@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _updateMarkers(MapLibreController controller) {
+  void _updateMarkers(mg.MapLibreController controller) {
     final wsProvider = context.read<WebSocketProvider>();
     
     // Remove old symbols
@@ -57,11 +57,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _addMarker(MapLibreController controller, dynamic location) async {
+  Future<void> _addMarker(mg.MapLibreController controller, dynamic location) async {
     try {
       final symbol = await controller.addSymbol(
-        SymbolOptions(
-          geometry: LatLng(location.lat, location.lng),
+        mg.SymbolOptions(
+          geometry: mg.LatLng(location.lat, location.lng),
           iconImage: 'marker',
           textField: location.id == context.read<WebSocketProvider>().userId 
               ? 'You' 
