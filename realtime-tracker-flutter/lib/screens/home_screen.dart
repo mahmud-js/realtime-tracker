@@ -16,7 +16,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late mg.MapLibreController mapController;
+  mg.MapLibreMapController? mapController;
   final List<mg.Symbol> _symbols = [];
   String mapStyle = 'https://demotiles.maplibre.org/style.json'; // Free MapLibre style
   bool _userZoomed = false;
@@ -42,7 +42,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _updateMarkers(mg.MapLibreController controller) {
+  void _updateMarkers(mg.MapLibreMapController? controller) {
+    if (controller == null) return;
+    
     final wsProvider = context.read<WebSocketProvider>();
     
     // Remove old symbols
@@ -57,7 +59,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _addMarker(mg.MapLibreController controller, dynamic location) async {
+  Future<void> _addMarker(mg.MapLibreMapController? controller, dynamic location) async {
+    if (controller == null) return;
     try {
       final symbol = await controller.addSymbol(
         mg.SymbolOptions(
@@ -108,7 +111,9 @@ class _HomeScreenState extends State<HomeScreen> {
               return mg.MapLibreMap(
                 styleString: mapStyle,
                 onMapCreated: (controller) {
-                  mapController = controller;
+                  setState(() {
+                    mapController = controller;
+                  });
                   _updateMarkers(controller);
                 },
                 initialCameraPosition: const mg.CameraPosition(
