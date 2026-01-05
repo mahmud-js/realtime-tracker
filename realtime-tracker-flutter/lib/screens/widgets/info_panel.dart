@@ -177,7 +177,7 @@ class _MapLayerSwitcherState extends State<_MapLayerSwitcher> {
             final isSelected = selectedLayer == entry.key;
             return FilterChip(
               label: Text(
-                entry.key.replaceAll(RegExp(r'([A-Z])'), ' $1').capitalize(),
+                entry.key.replaceAll(RegExp(r'([A-Z])'), ' $1').toCapitalized(),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
@@ -203,7 +203,7 @@ class _MapLayerSwitcherState extends State<_MapLayerSwitcher> {
 }
 
 extension StringExtension on String {
-  String capitalize() {
+  String toCapitalized() {
     return '${this[0].toUpperCase()}${substring(1)}';
   }
 }

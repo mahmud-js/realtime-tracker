@@ -1,10 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../providers/websocket_provider.dart';
 import '../providers/location_provider.dart';
-import '../theme/app_theme.dart';
 import 'widgets/info_panel.dart';
 import 'widgets/notification_widget.dart';
 
@@ -152,6 +152,3 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 }
-
-// Timer import (add to imports)
-import 'dart:async';
