@@ -177,7 +177,7 @@ class _MapLayerSwitcherState extends State<_MapLayerSwitcher> {
             final isSelected = selectedLayer == entry.key;
             return FilterChip(
               label: Text(
-                entry.key.replaceAll(RegExp(r'([A-Z])'), ' $1').toCapitalized(),
+                entry.key.replaceAll(RegExp(r'([A-Z])'), ' $1').trim(),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,

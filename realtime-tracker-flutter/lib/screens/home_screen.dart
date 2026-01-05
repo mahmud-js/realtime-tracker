@@ -76,8 +76,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (location.id == context.read<WebSocketProvider>().userId && !_userZoomed) {
         _userZoomed = true;
         await controller.animateCamera(
-          CameraUpdate.newLatLngZoom(
-            LatLng(location.lat, location.lng),
+          mg.CameraUpdate.newLatLngZoom(
+            mg.LatLng(location.lat, location.lng),
             15,
           ),
         );
@@ -105,14 +105,14 @@ class _HomeScreenState extends State<HomeScreen> {
           // Map
           Consumer2<WebSocketProvider, LocationProvider>(
             builder: (context, wsProvider, locationProvider, child) {
-              return MapLibreMap(
+              return mg.MapLibreMap(
                 styleString: mapStyle,
                 onMapCreated: (controller) {
                   mapController = controller;
                   _updateMarkers(controller);
                 },
-                initialCameraPosition: const CameraPosition(
-                  target: LatLng(51.505, -0.09),
+                initialCameraPosition: const mg.CameraPosition(
+                  target: mg.LatLng(51.505, -0.09),
                   zoom: 13,
                 ),
                 onStyleLoadedCallback: () {
