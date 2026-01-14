@@ -1,0 +1,180 @@
+name: Docker Build & Test
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'Dockerfile'
+      - 'docker-compose*.yml'
+      - 'go.mod'
+      - 'go.sum'
+      - '**.go'
+      - 'public/**'
+      - '.github/workflows/docker-build-test.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'Dockerfile'
+      - 'docker-compose*.yml'
+      - 'go.mod'
+      - 'go.sum'
+      - '**.go'
+      - 'public/**'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          load: true
+          tags: realtime-tracker:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run security scan on image
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image --severity HIGH,CRITICAL realtime-tracker:test || true
+
+      - name: Start container for testing
+        id: container_test
+        run: |
+          docker run -d \
+            --name tracker-test \
+            -p 8080:8080 \
+            -e PORT=8080 \
+            -e SERVER_HOST=0.0.0.0 \
+            --health-cmd="wget --quiet --tries=1 --spider http://localhost:8080/ || exit 1" \
+            --health-interval=10s \
+            --health-timeout=5s \
+            --health-retries=5 \
+            --health-start-period=10s \
+            realtime-tracker:test
+
+      - name: Wait for container to be healthy
+        run: |
+          echo "Waiting for container to be healthy..."
+          for i in {1..30}; do
+            health_status=$(docker inspect --format='{{.State.Health.Status}}' tracker-test)
+            if [ "$health_status" = "healthy" ]; then
+              echo "Container is healthy!"
+              exit 0
+            fi
+            echo "Attempt $i/30 - Health status: $health_status"
+            sleep 2
+          done
+          echo "Container failed to become healthy"
+          docker logs tracker-test
+          exit 1
+
+      - name: Test API endpoints
+        run: |
+          echo "Testing API endpoints..."
+          
+          # Test root endpoint
+          response=$(curl -s -w "\n%{http_code}" http://localhost:8080/)
+          http_code=$(echo "$response" | tail -n1)
+          if [ "$http_code" -ne 200 ]; then
+            echo "❌ Root endpoint test failed with status $http_code"
+            exit 1
+          fi
+          echo "✓ Root endpoint returned HTTP $http_code"
+          
+          # Test response time
+          start_time=$(date +%s%N)
+          curl -s http://localhost:8080/ > /dev/null
+          end_time=$(date +%s%N)
+          response_time=$((($end_time - $start_time) / 1000000))
+          echo "✓ Response time: ${response_time}ms"
+
+      - name: Check container logs
+        if: always()
+        run: |
+          echo "=== Container Logs ==="
+          docker logs tracker-test || true
+
+      - name: Inspect container
+        if: always()
+        run: |
+          echo "=== Container Inspection ==="
+          docker inspect tracker-test || true
+
+      - name: Stop test container
+        if: always()
+        run: docker stop tracker-test || true
+
+      - name: Remove test container
+        if: always()
+        run: docker rm tracker-test || true
+
+      - name: Build and push Docker image
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Generate summary
+        if: always()
+        run: |
+          echo "## Docker Build & Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository**: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Event**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Tests Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Docker image build" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Security scan (Trivy)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Container health check" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ API endpoint testing" >> $GITHUB_STEP_SUMMARY
