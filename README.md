@@ -10,6 +10,8 @@
 
 Check out the complete step-by-step tutorial on YouTube to learn how this project works and how to build it from scratch!
 
+Watch Now: https://youtu.be/KVJe6FejqX4?si=TmJ0p3Cm64Yi0kq0
+
 ## Features 🎯
 
 - ✅ Real-time location tracking using WebSocket
